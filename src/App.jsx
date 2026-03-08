@@ -195,25 +195,15 @@ function useLayout() {
 }
 async function askClaude(messages, system) {
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    const r = await fetch("/api/claude", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY || "",
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        system,
-        messages,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages, system }),
     });
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
       console.error("Claude API error:", r.status, err);
-      return `API error ${r.status}. Check your VITE_ANTHROPIC_API_KEY in .env`;
+      return `API error ${r.status}. Check Vercel logs.`;
     }
     const d = await r.json();
     return d.content?.map(b => b.text || "").join("") || "Unable to respond right now.";
@@ -222,7 +212,6 @@ async function askClaude(messages, system) {
     return "Network error. Check console.";
   }
 }
-
 // Personalized recommendations based on user data
 function getPersonalRecs(userData) {
   const { baseIncome=0, expenses={}, personality="balanced", incomeLog=[], expenseLog=[] } = userData;
