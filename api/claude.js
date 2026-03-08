@@ -5,6 +5,9 @@ export default async function handler(req, res) {
 
   const { messages, system } = req.body || {};
   const apiKey = process.env.GROQ_API_KEY;
+  
+  console.log("Key exists:", !!apiKey);
+  console.log("Messages:", JSON.stringify(messages));
 
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -19,13 +22,23 @@ export default async function handler(req, res) {
           { role: "system", content: system || "You are a helpful finance assistant." },
           ...messages
         ],
-        max_tokens: 800,
+        max_tokens: 500,
       }),
     });
+
     const data = await response.json();
+    console.log("Groq full response:", JSON.stringify(data));
+    
+    if (data.error) {
+      console.error("Groq error:", data.error);
+      return res.status(200).json({ content: [{ text: "Error: " + data.error.message }] });
+    }
+
     const text = data.choices?.[0]?.message?.content || "Unable to respond right now.";
+    console.log("Returning text:", text.substring(0, 100));
     return res.status(200).json({ content: [{ text }] });
   } catch (err) {
+    console.error("Catch error:", err.message);
     return res.status(500).json({ error: err.message });
   }
 }
