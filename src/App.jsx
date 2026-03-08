@@ -180,15 +180,51 @@ function getGrade(s) {
   if (s>=40) return { g:"D", color:"#F43F5E", label:"Needs Work" };
   return { g:"F", color:"#EF4444", label:"Critical" };
 }
-const getLayout = () => ({ isDesktop: window.innerWidth >= 1024, isTablet: window.innerWidth >= 768, isMobile: window.innerWidth < 768 });
+function useLayout() {
+  const [layout, setLayout] = useState(() => ({
+    isDesktop: window.innerWidth >= 1024,
+    isTablet:  window.innerWidth >= 768,
+    isMobile:  window.innerWidth < 768,
+  }));
+  useEffect(() => {
+    const update = () => setLayout({
+      isDesktop: window.innerWidth >= 1024,
+      isTablet:  window.innerWidth >= 768,
+      isMobile:  window.innerWidth < 768,
+    });
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  return layout;
+}
 async function askClaude(messages, system) {
-  const r = await fetch("/api/claude", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, system }),
-  });
-  const d = await r.json();
-  return d.content?.map(b => b.text || "").join("") || "Unable to respond right now.";
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY || "",
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system,
+        messages,
+      }),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      console.error("Claude API error:", r.status, err);
+      return `API error ${r.status}. Check your VITE_ANTHROPIC_API_KEY in .env`;
+    }
+    const d = await r.json();
+    return d.content?.map(b => b.text || "").join("") || "Unable to respond right now.";
+  } catch (e) {
+    console.error("askClaude failed:", e);
+    return "Network error. Check console.";
+  }
 }
 
 // Personalized recommendations based on user data
@@ -546,7 +582,7 @@ function TopBar({ C, onMenu, page }) {
 // ─────────────────────────────────────────────────────────
 function HomePage({ C, lang, setPage }) {
   const [hov, setHov] = useState(false);
-  const { isDesktop, isTablet } = getLayout();
+  const { isDesktop, isTablet } = useLayout();
   const wide = isDesktop || isTablet;
 
   return (
@@ -1013,7 +1049,7 @@ function AIAdviceBlock({ C, prompt, label }) {
 
 function DashboardPage({ C, lang, userData, setUserData, setPage }) {
   const { expenses={}, name="Friend", incomeLog=[], expenseLog=[], baseIncome=0 } = userData;
-  const { isMobile } = getLayout(); 
+  const { isMobile } = useLayout();
   const totalInc = incomeLog.reduce((a,b)=>a+b.amount,0);
   const totalExp = expenseLog.reduce((a,b)=>a+b.amount,0);
   const net      = totalInc - totalExp;
