@@ -954,6 +954,7 @@ function QuizPage({ C, lang, setPage, setUserData }) {
 // ADD EXPENSE / INCOME BOXES
 // ─────────────────────────────────────────────────────────
 function AddEntryBoxes({ C, userData, setUserData }) {
+  const { isMobile } = useLayout();
   const [expLabel, setExpLabel] = useState("");
   const [expCat,   setExpCat]   = useState("misc");
   const [expAmt,   setExpAmt]   = useState("");
