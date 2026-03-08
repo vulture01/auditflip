@@ -183,15 +183,11 @@ function getGrade(s) {
 function useLayout() {
   const [layout, setLayout] = useState(() => ({
     isDesktop: window.innerWidth >= 1024,
-    isTablet:  window.innerWidth >= 768,
-    isMobile:  window.innerWidth < 768,
+    isTablet: window.innerWidth >= 768,
+    isMobile: window.innerWidth < 768,
   }));
   useEffect(() => {
-    const update = () => setLayout({
-      isDesktop: window.innerWidth >= 1024,
-      isTablet:  window.innerWidth >= 768,
-      isMobile:  window.innerWidth < 768,
-    });
+    const update = () => setLayout({ isDesktop: window.innerWidth >= 1024, isTablet: window.innerWidth >= 768, isMobile: window.innerWidth < 768 });
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
