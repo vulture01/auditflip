@@ -4,26 +4,26 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const { messages, system } = req.body || {};
-  const apiKey = process.env.GEMINI_API_KEY;
-  console.log("API Key exists:", !!apiKey);
-
-  const prompt = (system ? system + "\n\n" : "") +
-    messages.map(m => m.role === "user" ? "User: " + m.content : "Assistant: " + m.content).join("\n");
+  const apiKey = process.env.GROQ_API_KEY;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        }),
-      }
-    );
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "llama3-8b-8192",
+        messages: [
+          { role: "system", content: system || "You are a helpful finance assistant." },
+          ...messages
+        ],
+        max_tokens: 800,
+      }),
+    });
     const data = await response.json();
-    console.log("Gemini response:", JSON.stringify(data)); 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Unable to respond right now.";
+    const text = data.choices?.[0]?.message?.content || "Unable to respond right now.";
     return res.status(200).json({ content: [{ text }] });
   } catch (err) {
     return res.status(500).json({ error: err.message });
