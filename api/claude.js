@@ -5,6 +5,7 @@ export default async function handler(req, res) {
 
   const { messages, system } = req.body || {};
   const apiKey = process.env.GEMINI_API_KEY;
+  console.log("API Key exists:", !!apiKey);
 
   const prompt = (system ? system + "\n\n" : "") +
     messages.map(m => m.role === "user" ? "User: " + m.content : "Assistant: " + m.content).join("\n");
