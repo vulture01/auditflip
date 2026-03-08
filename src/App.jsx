@@ -1013,7 +1013,7 @@ function AIAdviceBlock({ C, prompt, label }) {
 
 function DashboardPage({ C, lang, userData, setUserData, setPage }) {
   const { expenses={}, name="Friend", incomeLog=[], expenseLog=[], baseIncome=0 } = userData;
-
+  const { isMobile } = getLayout(); 
   const totalInc = incomeLog.reduce((a,b)=>a+b.amount,0);
   const totalExp = expenseLog.reduce((a,b)=>a+b.amount,0);
   const net      = totalInc - totalExp;
